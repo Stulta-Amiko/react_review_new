@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   BrowserRouter as Router,
   Route,
@@ -15,20 +15,47 @@ import Auth from './users/pages/Auth'
 import { AuthContext } from './context/auth-context'
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [token, setToken] = useState(false)
   const [userId, setUserId] = useState(false)
 
-  const login = useCallback((uid) => {
-    setIsLoggedIn(true)
+  const login = useCallback((uid, token, expirationDate) => {
+    setToken(token)
     setUserId(uid)
+    const tokenExpirationData =
+      expirationDate || new Date(new Date().getTime() + 1000 * 60 * 60)
+    localStorage.setItem(
+      'userData',
+      JSON.stringify({
+        userId: uid,
+        token: token,
+        expiration: tokenExpirationData.toISOString(),
+      })
+    )
   }, [])
+
   const logout = useCallback(() => {
-    setIsLoggedIn(false)
+    setToken(null)
     setUserId(null)
+    localStorage.removeItem('userData')
   }, [])
   let routes
 
-  if (isLoggedIn) {
+  useEffect(() => {
+    const storedData = JSON.parse(localStorage.getItem('userData'))
+    if (
+      storedData &&
+      storedData.token &&
+      new Date(storedData.expiration) > new Date()
+    ) {
+      login(
+        storedData.userId,
+        storedData.token,
+        new Date(storedData.expiration)
+      )
+    }
+  }, [login])
+
+  if (token) {
     routes = (
       <Switch>
         <Route path='/' exact>
@@ -66,7 +93,8 @@ function App() {
   return (
     <AuthContext.Provider
       value={{
-        isLoggedin: isLoggedIn,
+        isLoggedin: !!token,
+        token: token,
         userId: userId,
         login: login,
         logout: logout,
