@@ -44,7 +44,7 @@ const UpdatePlace = () => {
     const fetchPlace = async () => {
       try {
         const responseData = await sendRequest(
-          `http://localhost:8000/api/places/${placeId}`
+          `${process.env.REACT_APP_BACKEND_ADDRESS}/places/${placeId}`
         )
         setLodedPlaces(responseData.place)
         setFormData(
@@ -74,7 +74,7 @@ const UpdatePlace = () => {
 
     try {
       await sendRequest(
-        `http://localhost:8000/api/places/${placeId}`,
+        `${process.env.REACT_APP_BACKEND_ADDRESS}/places/${placeId}`,
         'PATCH',
         JSON.stringify({
           title: formState.inputs.title.value,

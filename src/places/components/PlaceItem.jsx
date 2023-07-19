@@ -30,7 +30,7 @@ const PlaceItem = (props) => {
     setShowComfirmModal(false)
     try {
       await sendRequest(
-        `http://localhost:8000/api/places/${props.id}`,
+        `${process.env.REACT_APP_BACKEND_ADDRESS}/places/${props.id}`,
         'DELETE',
         null,
         { Authorization: 'Baerer ' + auth.token }
@@ -79,7 +79,9 @@ const PlaceItem = (props) => {
         <Card className='place-item__content'>
           {isLoading && <LoadingSpinner asOverlay />}
           <div className='place-item__image'>
-            <img src={`http://localhost:8000/${props.image}`} />
+            <img
+              src={`${process.env.REACT_APP_BACKEND_ADDRESS_ASSET}/${props.image}`}
+            />
           </div>
           <div className='place-item__info'>
             <h2>{props.title}</h2>

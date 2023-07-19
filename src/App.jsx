@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { Suspense } from 'react'
 import {
   BrowserRouter as Router,
   Route,
@@ -6,54 +6,26 @@ import {
   Switch,
 } from 'react-router-dom'
 
-import Users from './users/pages/Users'
-import NewPlace from './places/pages/NewPlace'
+//import Users from './users/pages/Users'
+//import NewPlace from './places/pages/NewPlace'
+//import UserPlaces from './places/pages/UserPlaces'
+//import UpdatePlace from './places/pages/UpdatePlace'
+//import Auth from './users/pages/Auth'
 import MainNavigation from './shared/components/Navigation/MainNavigation'
-import UserPlaces from './places/pages/UserPlaces'
-import UpdatePlace from './places/pages/UpdatePlace'
-import Auth from './users/pages/Auth'
 import { AuthContext } from './context/auth-context'
+import { useAuth } from './shared/hooks/auth-hook'
+import LoadingSpinner from './shared/components/UIElements/LoadingSpinner'
+
+const Users = React.lazy(() => import('./users/pages/Users'))
+const NewPlace = React.lazy(() => import('./places/pages/NewPlace'))
+const UserPlaces = React.lazy(() => import('./places/pages/UserPlaces'))
+const UpdatePlace = React.lazy(() => import('./places/pages/UpdatePlace'))
+const Auth = React.lazy(() => import('./users/pages/Auth'))
 
 function App() {
-  const [token, setToken] = useState(false)
-  const [userId, setUserId] = useState(false)
+  const { token, login, logout, userId } = useAuth()
 
-  const login = useCallback((uid, token, expirationDate) => {
-    setToken(token)
-    setUserId(uid)
-    const tokenExpirationData =
-      expirationDate || new Date(new Date().getTime() + 1000 * 60 * 60)
-    localStorage.setItem(
-      'userData',
-      JSON.stringify({
-        userId: uid,
-        token: token,
-        expiration: tokenExpirationData.toISOString(),
-      })
-    )
-  }, [])
-
-  const logout = useCallback(() => {
-    setToken(null)
-    setUserId(null)
-    localStorage.removeItem('userData')
-  }, [])
   let routes
-
-  useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem('userData'))
-    if (
-      storedData &&
-      storedData.token &&
-      new Date(storedData.expiration) > new Date()
-    ) {
-      login(
-        storedData.userId,
-        storedData.token,
-        new Date(storedData.expiration)
-      )
-    }
-  }, [login])
 
   if (token) {
     routes = (
@@ -102,7 +74,17 @@ function App() {
     >
       <Router>
         <MainNavigation />
-        <main>{routes}</main>
+        <main>
+          <Suspense
+            fallback={
+              <div className='center'>
+                <LoadingSpinner />
+              </div>
+            }
+          >
+            {routes}
+          </Suspense>
+        </main>
       </Router>
     </AuthContext.Provider>
   )
